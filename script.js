@@ -13,15 +13,33 @@ function loadMorningBrew() {
       const rows = parseSheetJSON(txt);
       const container = document.getElementById("morningbrew-container");
       rows.slice(1).forEach(r => {
-        const [title, platform, embedURL] = r;
-        if (!embedURL) return;
+        const [title, platform, embedCode] = r;
+        if (!embedCode) return;
+
         const card = document.createElement("div");
         card.className = "card";
-        card.innerHTML = `
-          <iframe src="${embedURL}" allowfullscreen></iframe>
-          <h3>${title}</h3>
-        `;
-        container.appendChild(card);
+
+        if (platform.toLowerCase() === "instagram" && embedCode.includes('<blockquote class="instagram-media')) {
+          // Insert Instagram embed HTML
+          card.innerHTML = embedCode + `<h3>${title}</h3>`;
+          container.appendChild(card);
+
+          // Load Instagram embed script
+          if (!window.instgrm) {
+            const script = document.createElement("script");
+            script.src = "https://www.instagram.com/embed.js";
+            document.body.appendChild(script);
+          } else {
+            window.instgrm.Embeds.process();
+          }
+        } else {
+          // Regular iframe for YouTube / TikTok / Shorts
+          card.innerHTML = `
+            <iframe src="${embedCode}" allowfullscreen></iframe>
+            <h3>${title}</h3>
+          `;
+          container.appendChild(card);
+        }
       });
     });
 }
